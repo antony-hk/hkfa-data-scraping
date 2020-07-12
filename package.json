@@ -1,0 +1,29 @@
+{
+  "name": "hkfa-data-scraping",
+  "version": "0.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "all-csv": "node --experimental-modules src/all-csv.mjs",
+    "csv": "node --experimental-modules src/csv.mjs",
+    "league2data": "node --experimental-modules src/index.mjs",
+    "player2data": "node --experimental-modules src/player.mjs",
+    "hkpl": "npm run league2data 10",
+    "hkd1": "npm run league2data 0",
+    "hkd2": "npm run league2data 1",
+    "hkd3": "npm run league2data 8",
+    "mkdir": "mkdir data && mkdir data/club && mkdir data/league && mkdir data/player",
+    "fm-data": "npm run hkpl && npm run hkd1 && npm run hkd2 && npm run hkd3",
+    "fm": "npm run fm-data && npm run csv",
+    "auto": "npm run mkdir && npm run fm"
+  },
+  "author": "Antony Tse",
+  "license": "MIT",
+  "dependencies": {
+    "cheerio": "^1.0.0-rc.2",
+    "deepmerge": "^2.1.0",
+    "node-fetch": "^2.1.2",
+    "ssl-root-cas": "^1.3.1",
+    "write-csv": "^1.0.0"
+  }
+}
