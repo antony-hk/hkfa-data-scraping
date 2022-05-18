@@ -7,6 +7,7 @@
     "csv": "npm run csv:league && npm run csv:player",
     "csv:player": "node src/all-csv.mjs",
     "csv:league": "node src/csv.mjs",
+    "image-dl": "node src/image-dl.mjs",
     "league-to-data": "node src/leagueToData.mjs",
     "player-to-data": "node src/playerToData.mjs",
     "scrap": "npm run scrap:league && npm run scrap:player",
@@ -22,8 +23,10 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "deepmerge": "^2.1.0",
-    "node-fetch": "^3.0.0",
+    "mkdirp": "^1.0.4",
+    "node-fetch": "^3.2.4",
     "redis": "^4.0.0-rc.3",
+    "sanitize-filename": "^1.6.3",
     "write-csv": "^1.0.0"
   }
 }
