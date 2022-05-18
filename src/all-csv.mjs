@@ -1,32 +1,58 @@
 import fs from 'fs';
-import writeCsv from 'write-csv';
+import csvStringify from 'csv-stringify';
+import { exit } from 'process';
+import { createClient } from 'redis';
 
-const playerFiles = fs.readdirSync('data/player');
+const csvStringifyAsync = (data) => {
+    return new Promise((resolve, reject) => {
+        csvStringify(data, { header: true }, (err, output) => {
+            if (err) {
+                reject(err);
+            }
+        
+            resolve(output);
+        });
+    });
+};
 
-let clubOrder = [];
-let playerOrder = [];
+(async function allCsv() {
+    const redisClient = createClient();
 
-let clubs = {};
-let players = {};
-let rows = {};
+    redisClient.on('error', (err) => console.log('Redis Client Error', err));
+    await redisClient.connect();
 
-playerFiles.forEach((filename) => {
+    let players  = new Map();
+    let rows = new Map();
 
-    const player = JSON.parse(fs.readFileSync(`data/player/${filename}`));
-    const { playerId } = player;
-    playerOrder.push(playerId);
-    players[playerId] = player;
+    const keys = await redisClient.keys('hds-player-*');
 
-    rows[playerId] = {
-        playerId: player.playerId,
-        playerNumber: player.number,
-        playerChineseName: player.chineseName,
-        playerEnglishName: player.englishName,
-        playerDateOfBirth: player.dateOfBirth,
-        playerHeight: player.height,
-        playerWeight: player.weight,
-        playerPosition: player.position,
-    };
-});
+    await Promise.all(keys.map(async (key) => {
+        const playerJson = await redisClient.get(key);
 
-writeCsv(`data/all.csv`, playerOrder.map(playerId => rows[playerId]));
+        const player = JSON.parse(playerJson);
+        const playerId = parseInt(player.playerId, 10);
+
+        players.set(playerId, player);
+        rows.set(playerId, {
+            playerId,
+            playerNumber: player.number,
+            playerChineseName: player.chineseName,
+            playerEnglishName: player.englishName,
+            playerDateOfBirth: player.dateOfBirth,
+            playerHeight: player.height,
+            playerWeight: player.weight,
+            playerPosition: player.position,
+        });
+    }));
+
+    const result = [...rows.values()];
+    result.sort((playerA, playerB) => {
+        return playerA.playerId - playerB.playerId;
+    });
+
+    const csv = await csvStringifyAsync(result);
+    fs.writeFileSync('./all.csv', csv);
+
+    console.log('Done');
+    exit(0);
+})();

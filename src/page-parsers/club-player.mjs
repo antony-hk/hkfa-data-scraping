@@ -26,6 +26,20 @@ async function fetchText(url) {
     return await res.text();
 }
 
+async function fetchTextWithRetry(url) {
+    let body;
+
+    while (!body) {
+        try {
+            body = await fetchText(url);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+    
+    return body;
+}
+
 function parseDate(str) {
     str = str.replace(/\//g, '-');
     return new Date(str);
@@ -159,13 +173,18 @@ function parsePlayers($) {
 }
 
 async function parse(playerId, clubId = 4) {
-    const bodies = await Promise.all([fetchText(getChineseUrl(playerId, clubId)), fetchText(getEnglishUrl(playerId, clubId))]);
+    const bodies = await Promise.all([
+        fetchTextWithRetry(getChineseUrl(playerId, clubId)),
+        fetchTextWithRetry(getEnglishUrl(playerId, clubId)),
+    ]);
 
     const c$ = cheerio.load(bodies[0]); // Chinese version
     const e$ = cheerio.load(bodies[1]); // English version
 
     const chineseResult = parsePlayers(c$);
     const englishResult = parsePlayers(e$);
+
+    console.log(`${playerId} ${chineseResult.chineseName} ${englishResult.englishName}`);
 
     return {
         playerId,

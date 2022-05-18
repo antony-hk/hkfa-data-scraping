@@ -1,26 +1,19 @@
-import fs from 'fs';
+import { createClient } from 'redis';
 
 import parseClub from './page-parsers/club.mjs';
 import parseClubPlayer from './page-parsers/club-player.mjs';
 import parseLeague from './page-parsers/league.mjs';
 
-// process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = 0;
+export default async function main(defaultParsingQueue = []) {
+    const redisClient = createClient();
 
-async function main(leagueId) {
-    let parsingQueue = [{
-        page: 'league',
-        args: [leagueId],
-    }];
+    redisClient.on('error', (err) => console.log('Redis Client Error', err));
+    await redisClient.connect();
 
-    let maxNumWorkers = 10;
+    let parsingQueue = defaultParsingQueue.slice();
+
+    let maxNumWorkers = 100;
     let numWorking = 0;
-
-    function queue(page, args) {
-        parsingQueue.push({
-            page,
-            args,
-        });
-    }
 
     async function next() {
         numWorking++;
@@ -41,11 +34,11 @@ async function main(leagueId) {
         switch (page) {
             case 'league': {
                 const league = await parseLeague(...args);
-                fs.writeFileSync(`data/league/${args[0]}.json`, JSON.stringify(league));
+                await redisClient.set(`hds-league-${args[0]}`, JSON.stringify(league));
 
                 const { clubs } = league;
                 clubs.forEach((club) => {
-                    queue('club', [club.clubId]);
+                    parsingQueue.push({ page: 'club', args: [club.clubId] });
                 });
 
                 break;
@@ -53,17 +46,17 @@ async function main(leagueId) {
 
             case 'club': {
                 const club = await parseClub(...args);
-                fs.writeFileSync(`data/club/${args[0]}.json`, JSON.stringify(club));
+                await redisClient.set(`hds-club-${args[0]}`, JSON.stringify(club));
 
                 const { clubId, players, reservePlayers } = club;
                 if (players) {
                     players.forEach((player) => {
-                        queue('club-player', [player.playerId, clubId]);
+                        parsingQueue.push({ page: 'club-player', args: [player.playerId, clubId] });
                     })
                 }
                 if (reservePlayers) {
                     reservePlayers.forEach((player) => {
-                        queue('club-player', [player.playerId, clubId]);
+                        parsingQueue.push({ page: 'club-player', args: [player.playerId, clubId] });
                     })
                 }
                 break;
@@ -72,7 +65,7 @@ async function main(leagueId) {
             case 'club-player': {
                 const player = await parseClubPlayer(...args);
                 const { playerId } = player;
-                fs.writeFileSync(`data/player/${playerId}.json`, JSON.stringify(player));
+                await redisClient.set(`hds-player-${playerId}`, JSON.stringify(player));
 
                 break;
             }
@@ -80,15 +73,14 @@ async function main(leagueId) {
 
         numWorking--;
 
+        const nextJobs = [];
+
         for (let i = 0; i < (maxNumWorkers - numWorking); i++) {
-            next();
+            nextJobs.push(next());
         }
+
+        await Promise.all(nextJobs);
     }
 
-    next();
+    await next();
 }
-
-(async function() {
-    const leagueId = parseInt(process.argv[process.argv.length - 1]);
-    await main(leagueId);
-})();
