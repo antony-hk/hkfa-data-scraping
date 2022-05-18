@@ -6,8 +6,8 @@
   "scripts": {
     "all-csv": "node --experimental-modules src/all-csv.mjs",
     "csv": "node --experimental-modules src/csv.mjs",
-    "league2data": "node --experimental-modules src/index.mjs",
-    "player2data": "node --experimental-modules src/player.mjs",
+    "league2data": "NODE_TLS_REJECT_UNAUTHORIZED=0 node src/league2data.mjs",
+    "player2data": "NODE_TLS_REJECT_UNAUTHORIZED=0 node src/player2data.mjs",
     "hkpl": "npm run league2data 10",
     "hkd1": "npm run league2data 0",
     "hkd2": "npm run league2data 1",
@@ -22,8 +22,8 @@
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
     "deepmerge": "^2.1.0",
-    "node-fetch": "^2.6.1",
-    "ssl-root-cas": "^1.3.1",
+    "node-fetch": "^3.0.0",
+    "redis": "^4.0.0-rc.3",
     "write-csv": "^1.0.0"
   }
 }
