@@ -1,5 +1,8 @@
 # HKFA Data Scraping Tool
-Scraping the data from the official website of Hong Kong Football Association.
+Scraping the data from the [official website of Hong Kong Football Association](https://www.hkfa.com).
+
+## Pre-requesties
+Since the version 4 of `redis` package from npm is used, Redis >=5.0 is required for this tool.
 
 ## Run in command line
 With node.js version 13.2.0 or later, you can run the tool with the following command.
