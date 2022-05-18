@@ -79,6 +79,7 @@ const csvStringifyAsync = (data) => {
                     playerHeight: player.height,
                     playerWeight: player.weight,
                     playerPosition: player.position,
+                    imageSrc: player.imageSrc,
                 });
             };
 
