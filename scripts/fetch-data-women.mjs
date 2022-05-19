@@ -8,10 +8,13 @@ import parseLeagueYear from '../src/page-parsers/leagueyear.mjs';
 
 const limit = pLimit(10);
 
-function addAllClubIdsFromResult(set, result) {
+function addAllClubIdsFromResult(map, result) {
     result.schedules.forEach((match) => {
-        match.clubIds.forEach((clubId) => {
-            set.add(clubId);
+        match.clubIds.forEach((clubId, index) => {
+            map.set(clubId, {
+                chineseName: match.teamNames[index].ch,
+                englishName: match.teamNames[index].en,
+            });
         });
     });
 }
@@ -31,7 +34,7 @@ function addCompetitionNameFromResult(set, result) {
     await redisClient.connect();
 
     const promises = [];
-    const clubIdSet = new Set();
+    const clubIdMap = new Map();    // <clubId, data object>
     const competitionNameSet = new Set();
 
     const parseAndAnalyzeSingleLeagueYearPage = async (pageNumber) => {
@@ -41,7 +44,7 @@ function addCompetitionNameFromResult(set, result) {
             type: 4,
         });
 
-        addAllClubIdsFromResult(clubIdSet, result);
+        addAllClubIdsFromResult(clubIdMap, result);
         addCompetitionNameFromResult(competitionNameSet, result);
 
         return result;
@@ -84,15 +87,33 @@ function addCompetitionNameFromResult(set, result) {
     await Promise.all(promises);
     promises.splice(0, promises.length);    // Clear array
 
+    // TODO: Unify the club data format in `hds-league-*`
+    const leagueData = {
+        leagueId: 'women',
+        clubs: [],
+    };
+
     // Parse club pages
-    clubIdSet.forEach((clubId) => {
+    // clubIdMap.forEach((clubId) => {
+    for (const [clubId, clubData] of clubIdMap) {
+        // TODO: Unify the club data format in `hds-league-*`
+        leagueData.clubs.push({
+            clubId,
+            chineseName: clubData.chineseName,
+            englishName: clubData.englishName,
+        });
+
         promises.push(
             limit(async () => {
                 const result = await parseClub([clubId]);
                 await redisClient.set(`hds-club-${clubId}`, JSON.stringify(result));
             })
-        )
-    });
+        );
+    }
+
+    // TODO: Unify the club data format in `hds-league-*`
+    await redisClient.set(`hds-league-women`, JSON.stringify(leagueData));
+
     await Promise.all(promises);
 
     console.log('Done');
