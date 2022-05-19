@@ -22,7 +22,8 @@
   "license": "MIT",
   "dependencies": {
     "cheerio": "^1.0.0-rc.2",
-    "deepmerge": "^2.1.0",
+    "deepmerge": "^4.2.2",
+    "jsdom": "^19.0.0",
     "mkdirp": "^1.0.4",
     "node-fetch": "^3.2.4",
     "redis": "^4.0.0-rc.3",
