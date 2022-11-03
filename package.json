@@ -26,7 +26,7 @@
     "deepmerge": "^4.2.2",
     "jsdom": "^19.0.0",
     "mkdirp": "^1.0.4",
-    "node-fetch": "^3.2.4",
+    "node-fetch": "^3.2.10",
     "redis": "^4.0.0-rc.3",
     "sanitize-filename": "^1.6.3",
     "write-csv": "^1.0.0"
