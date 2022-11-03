@@ -106,6 +106,7 @@ function addCompetitionNameFromResult(set, result) {
         promises.push(
             limit(async () => {
                 const result = await parseClub([clubId]);
+                console.log('Parsed club ID', clubId);
                 await redisClient.set(`hds-club-${clubId}`, JSON.stringify(result));
             })
         );
