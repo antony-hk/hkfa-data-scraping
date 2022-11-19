@@ -17,7 +17,8 @@
     "scrap:hkd3": "npm run league-to-data 8",
     "scrap:league": "npm run scrap:hkpl && npm run scrap:hkd1 && npm run scrap:hkd2 && npm run scrap:hkd3",
     "scrap:player": "npm run player-to-data",
-    "scrap:women": "node scripts/fetch-data-women.mjs"
+    "scrap:women": "node scripts/fetch-data-women.mjs",
+    "deno-test:match": "deno --unstable run --allow-env --allow-net --allow-read scripts/view-match.ts"
   },
   "author": "Antony Tse",
   "license": "MIT",
